@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function AuthPage() {
   const { login, register } = useAuth();
@@ -10,6 +11,7 @@ export default function AuthPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -79,20 +81,29 @@ export default function AuthPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
-              placeholder="john@example.com"
+              placeholder="you@example.com"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all pr-10"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
 
           {error && (
@@ -122,4 +133,5 @@ export default function AuthPage() {
     </div>
   );
 }
+
 
