@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { db, Note } from '../lib/storage';
 import { Archive, RefreshCw, Trash2, Clock } from 'lucide-react';
@@ -11,7 +11,7 @@ export default function ArchivePage() {
   const [archivedNotes, setArchivedNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     loadArchived();
   }, [user]);
 
@@ -87,4 +87,5 @@ export default function ArchivePage() {
     </div>
   );
 }
+
 
