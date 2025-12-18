@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useState } from 'react';
-import { AuthProvider, useAuth } from './hooks/useAuth';
-import { Sidebar } from './components/Sidebar';
-import Dashboard from './components/Dashboard';
-import NoteEditor from './components/NoteEditor';
-import NotesList from './components/NotesList';
-import TagManager from './components/TagManager';
-import SettingsPage from './components/SettingsPage';
-import ArchivePage from './components/ArchivePage';
-import AuthPage from './components/AuthPage';
+import { AuthProvider, useAuth } from '../hooks/useAuth';
+import { Sidebar } from '../components/Sidebar';
+import Dashboard from '../components/Dashboard';
+import NoteEditor from '../components/NoteEditor';
+import NotesList from '../components/NotesList';
+import TagManager from '../components/TagManager';
+import SettingsPage from '../components/SettingsPage';
+import ArchivePage from '../components/ArchivePage';
+import AuthPage from '../components/AuthPage';
 import { Menu } from 'lucide-react';
 
 function AppContent() {
@@ -117,3 +117,4 @@ export default function Page() {
     </AuthProvider>
   );
 }
+
