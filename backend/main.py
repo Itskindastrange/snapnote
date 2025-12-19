@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from database import db, settings
 from routes import auth, notes, tags, users
@@ -17,7 +17,23 @@ app.include_router(notes.router)
 app.include_router(tags.router)
 app.include_router(users.router)
 
-origins = settings.ALLOWED_ORIGINS.split(",")
+origins = [origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",")]
+print(f"DEBUG: Allowed Origins: {origins}")
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    print(f"Incoming request: {request.method} {request.url}")
+    origin = request.headers.get('origin')
+    print(f"Origin header: {origin}")
+    if origin:
+        if origin in origins:
+             print(f"Origin {origin} is allowed.")
+        else:
+             print(f"Origin {origin} is NOT in allowed origins: {origins}")
+    
+    response = await call_next(request)
+    print(f"Response status: {response.status_code}")
+    return response
 
 app.add_middleware(
     CORSMiddleware,
