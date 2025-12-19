@@ -20,6 +20,7 @@ app.include_router(users.router)
 origins = [
     "http://localhost:3000",
     "http://localhost:5173",
+    "https://snapnote-6jja.onrender.com",
 ]
 
 app.add_middleware(
