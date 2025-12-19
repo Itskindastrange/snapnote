@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class Settings(BaseSettings):
-    MONGODB_URI: str = "mongodb+srv://abdullahahmad_db_user:ogVjwfxAdTU6lPLN@cluster0.0cr6loe.mongodb.net/?appName=Cluster0"
+    MONGODB_URI: str
     DB_NAME: str = "snapnote"
     JWT_SECRET_KEY: str
     ALGORITHM: str = "HS256"
@@ -17,6 +17,7 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+
 
 settings = Settings()
 
