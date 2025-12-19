@@ -6,3 +6,4 @@ pydantic-settings
 pyjwt
 passlib[argon2]
 python-multipart
+pydantic[email]
