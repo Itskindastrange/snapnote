@@ -17,7 +17,7 @@ export default function NotesList({ onNavigate, initialTagFilter }: NotesListPro
   const [notes, setNotes] = useState<Note[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTags, setSelectedTags] = useState<string[]>(initialTagFilter ? [initialTagFilter] : []);
+  const [selectedTagNames, setSelectedTagNames] = useState<string[]>(initialTagFilter ? [initialTagFilter] : []);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -40,11 +40,11 @@ export default function NotesList({ onNavigate, initialTagFilter }: NotesListPro
     }
   };
 
-  const toggleTag = (tagId: string) => {
-    if (selectedTags.includes(tagId)) {
-      setSelectedTags(selectedTags.filter(id => id !== tagId));
+  const toggleTag = (tagName: string) => {
+    if (selectedTagNames.includes(tagName)) {
+      setSelectedTagNames(selectedTagNames.filter(name => name !== tagName));
     } else {
-      setSelectedTags([...selectedTags, tagId]);
+      setSelectedTagNames([...selectedTagNames, tagName]);
     }
   };
 
@@ -55,8 +55,8 @@ export default function NotesList({ onNavigate, initialTagFilter }: NotesListPro
       note.content.toLowerCase().includes(searchQuery.toLowerCase());
 
     // Tag filter (AND logic)
-    const matchesTags = selectedTags.length === 0 || 
-      selectedTags.every(tagId => note.tags.includes(tagId));
+    const matchesTags = selectedTagNames.length === 0 ||
+      selectedTagNames.every(tagName => note.tags.includes(tagName));
 
     return matchesSearch && matchesTags;
   }).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
@@ -74,9 +74,9 @@ export default function NotesList({ onNavigate, initialTagFilter }: NotesListPro
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm text-slate-300 mb-2">
             <span>Tags</span>
-            {selectedTags.length > 0 && (
-              <button 
-                onClick={() => setSelectedTags([])}
+            {selectedTagNames.length > 0 && (
+              <button
+                onClick={() => setSelectedTagNames([])}
                 className="text-xs text-blue-400 hover:text-blue-300"
               >
                 Clear
@@ -87,9 +87,9 @@ export default function NotesList({ onNavigate, initialTagFilter }: NotesListPro
           {tags.map(tag => (
             <button
               key={tag.id}
-              onClick={() => toggleTag(tag.id)}
+              onClick={() => toggleTag(tag.name)}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
-                selectedTags.includes(tag.id)
+                selectedTagNames.includes(tag.name)
                   ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30'
                   : 'text-slate-400 hover:bg-white/5 hover:text-white'
               }`}
@@ -99,7 +99,7 @@ export default function NotesList({ onNavigate, initialTagFilter }: NotesListPro
                 <span>{tag.name}</span>
               </div>
               <span className="text-xs opacity-50">
-                {notes.filter(n => n.tags.includes(tag.id)).length}
+                {notes.filter(n => n.tags.includes(tag.name)).length}
               </span>
             </button>
           ))}
@@ -138,9 +138,9 @@ export default function NotesList({ onNavigate, initialTagFilter }: NotesListPro
             {tags.map(tag => (
               <button
                 key={tag.id}
-                onClick={() => toggleTag(tag.id)}
+                onClick={() => toggleTag(tag.name)}
                 className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                  selectedTags.includes(tag.id)
+                  selectedTagNames.includes(tag.name)
                     ? 'bg-blue-600/20 text-blue-300 border-blue-500/30'
                     : 'bg-white/5 text-slate-400 border-white/10'
                 }`}
@@ -186,12 +186,10 @@ export default function NotesList({ onNavigate, initialTagFilter }: NotesListPro
                         <span>{formatDate(note.updatedAt)}</span>
                       </div>
                       <div className="flex gap-1">
-                        {note.tags.slice(0, 2).map(tagId => {
-                          const tag = tags.find(t => t.id === tagId);
-                          if (!tag) return null;
+                        {note.tags.slice(0, 2).map(tagName => {
                           return (
-                            <span key={tagId} className="px-2 py-0.5 bg-slate-800 rounded-full text-[10px]">
-                              #{tag.name}
+                            <span key={tagName} className="px-2 py-0.5 bg-slate-800 rounded-full text-[10px]">
+                              #{tagName}
                             </span>
                           );
                         })}

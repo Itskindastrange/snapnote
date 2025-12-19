@@ -1,15 +1,14 @@
 "use client";
 
-import { generateId } from './utils';
+import { api } from './api';
 
 // Types
 export interface User {
   id: string;
   email: string;
   name: string;
-  passwordHash: string; // In a real app, this would be hashed. Here we just store it.
   createdAt: string;
-  preferences: {
+  preferences?: {
     theme: 'light' | 'dark';
   };
 }
@@ -19,7 +18,7 @@ export interface Note {
   title: string;
   content: string;
   ownerId: string;
-  tags: string[]; // Array of tag IDs
+  tags: string[]; // Backend stores these as tag NAMES (strings), not IDs
   isArchived: boolean;
   createdAt: string;
   updatedAt: string;
@@ -32,202 +31,126 @@ export interface Tag {
   createdAt: string;
 }
 
-// Storage Keys
-const USERS_KEY = 'snapnote_users';
-const NOTES_KEY = 'snapnote_notes';
-const TAGS_KEY = 'snapnote_tags';
-const CURRENT_USER_KEY = 'snapnote_current_user';
+// Helpers to map backend responses to frontend interfaces
+const mapUser = (data: any): User => ({
+  id: data._id || data.id,
+  email: data.email,
+  name: data.name,
+  createdAt: data.created_at,
+  preferences: { theme: 'dark' } // Default since backend doesn't store yet
+});
 
-// Helper to simulate delay
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const mapNote = (data: any): Note => ({
+  id: data._id || data.id,
+  title: data.title,
+  content: data.content,
+  ownerId: data.user_id,
+  tags: data.tags || [],
+  isArchived: data.is_archived,
+  createdAt: data.created_at,
+  updatedAt: data.updated_at
+});
+
+const mapTag = (data: any): Tag => ({
+  id: data._id || data.id,
+  name: data.name,
+  ownerId: data.user_id,
+  createdAt: data.created_at
+});
 
 // DB Operations
 export const db = {
   // User Operations
   users: {
-    create: async (userData: Omit<User, 'id' | 'createdAt' | 'preferences'>) => {
-      await delay(300);
-      const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-      
-      if (users.find((u: User) => u.email === userData.email)) {
-        throw new Error('Email already exists');
-      }
-
-      const newUser: User = {
-        ...userData,
-        id: generateId(),
-        createdAt: new Date().toISOString(),
-        preferences: { theme: 'dark' }
-      };
-
-      users.push(newUser);
-      localStorage.setItem(USERS_KEY, JSON.stringify(users));
-      return newUser;
+    create: async (userData: { name: string; email: string; passwordHash: string }) => {
+      // Register
+      const res = await api.post('/auth/signup', {
+        name: userData.name,
+        email: userData.email,
+        password: userData.passwordHash
+      });
+      return mapUser(res.data);
     },
     
     login: async (email: string, password: string) => {
-      await delay(300);
-      const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-      const user = users.find((u: User) => u.email === email && u.passwordHash === password);
-      
-      if (!user) {
-        throw new Error('Invalid credentials');
-      }
-      
-      return user;
+      const res = await api.post('/auth/login', { email, password });
+      return mapUser(res.data);
     },
 
     update: async (id: string, updates: Partial<User>) => {
-      await delay(200);
-      const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-      const index = users.findIndex((u: User) => u.id === id);
-      
-      if (index === -1) throw new Error('User not found');
-      
-      const updatedUser = { ...users[index], ...updates };
-      users[index] = updatedUser;
-      localStorage.setItem(USERS_KEY, JSON.stringify(users));
-      return updatedUser;
+      // Backend expects { name: "..." }
+      const res = await api.put('/users/profile', updates);
+      return mapUser(res.data);
     }
   },
 
   // Note Operations
   notes: {
     list: async (userId: string) => {
-      await delay(200);
-      const notes = JSON.parse(localStorage.getItem(NOTES_KEY) || '[]');
-      return notes.filter((n: Note) => n.ownerId === userId && !n.isArchived);
+      const res = await api.get('/notes/');
+      return res.data.map(mapNote);
     },
 
     listArchived: async (userId: string) => {
-      await delay(200);
-      const notes = JSON.parse(localStorage.getItem(NOTES_KEY) || '[]');
-      return notes.filter((n: Note) => n.ownerId === userId && n.isArchived);
+      const res = await api.get('/notes/?archived=true');
+      return res.data.map(mapNote);
     },
 
     create: async (noteData: Omit<Note, 'id' | 'createdAt' | 'updatedAt' | 'isArchived'>) => {
-      await delay(200);
-      const notes = JSON.parse(localStorage.getItem(NOTES_KEY) || '[]');
-      
-      const newNote: Note = {
-        ...noteData,
-        id: generateId(),
-        isArchived: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      notes.unshift(newNote); // Add to beginning
-      localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
-      return newNote;
+      const res = await api.post('/notes/', {
+        title: noteData.title,
+        content: noteData.content,
+        tags: noteData.tags // Should be names array
+      });
+      return mapNote(res.data);
     },
 
     update: async (id: string, updates: Partial<Note>) => {
-      // Don't delay too much for auto-save feel
-      const notes = JSON.parse(localStorage.getItem(NOTES_KEY) || '[]');
-      const index = notes.findIndex((n: Note) => n.id === id);
-      
-      if (index === -1) throw new Error('Note not found');
-      
-      const updatedNote = { 
-        ...notes[index], 
-        ...updates,
-        updatedAt: new Date().toISOString()
-      };
-      
-      notes[index] = updatedNote;
-      localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
-      return updatedNote;
+      const res = await api.put(`/notes/${id}`, {
+        title: updates.title,
+        content: updates.content,
+        tags: updates.tags,
+        is_archived: updates.isArchived
+      });
+      return mapNote(res.data);
     },
 
     delete: async (id: string) => { // Soft delete
-      await delay(200);
-      const notes = JSON.parse(localStorage.getItem(NOTES_KEY) || '[]');
-      const index = notes.findIndex((n: Note) => n.id === id);
-      
-      if (index === -1) throw new Error('Note not found');
-      
-      notes[index].isArchived = true;
-      notes[index].updatedAt = new Date().toISOString();
-      
-      localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
-      return notes[index];
+      await api.delete(`/notes/${id}`);
+      // Return a mock object to satisfy potential return type expectations, though mostly unused
+      return { id } as any; 
     },
 
     permanentDelete: async (id: string) => {
-      await delay(200);
-      const notes = JSON.parse(localStorage.getItem(NOTES_KEY) || '[]');
-      const filteredNotes = notes.filter((n: Note) => n.id !== id);
-      localStorage.setItem(NOTES_KEY, JSON.stringify(filteredNotes));
+      await api.delete(`/notes/${id}/permanent`);
     },
 
     restore: async (id: string) => {
-      await delay(200);
-      const notes = JSON.parse(localStorage.getItem(NOTES_KEY) || '[]');
-      const index = notes.findIndex((n: Note) => n.id === id);
-      
-      if (index === -1) throw new Error('Note not found');
-      
-      notes[index].isArchived = false;
-      notes[index].updatedAt = new Date().toISOString();
-      
-      localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
-      return notes[index];
+      const res = await api.post(`/notes/${id}/restore`);
+      return mapNote(res.data);
     }
   },
 
   // Tag Operations
   tags: {
     list: async (userId: string) => {
-      await delay(200);
-      const tags = JSON.parse(localStorage.getItem(TAGS_KEY) || '[]');
-      return tags.filter((t: Tag) => t.ownerId === userId);
+      const res = await api.get('/tags/');
+      return res.data.map(mapTag);
     },
 
-    create: async (tagData: Omit<Tag, 'id' | 'createdAt'>) => {
-      await delay(200);
-      const tags = JSON.parse(localStorage.getItem(TAGS_KEY) || '[]');
-      
-      // Check if exists
-      const existing = tags.find((t: Tag) => t.name === tagData.name && t.ownerId === tagData.ownerId);
-      if (existing) return existing;
-
-      const newTag: Tag = {
-        ...tagData,
-        id: generateId(),
-        createdAt: new Date().toISOString()
-      };
-
-      tags.push(newTag);
-      localStorage.setItem(TAGS_KEY, JSON.stringify(tags));
-      return newTag;
+    create: async (tagData: { name: string; ownerId: string }) => {
+      const res = await api.post('/tags/', { name: tagData.name });
+      return mapTag(res.data);
     },
 
     update: async (id: string, name: string) => {
-      await delay(200);
-      const tags = JSON.parse(localStorage.getItem(TAGS_KEY) || '[]');
-      const index = tags.findIndex((t: Tag) => t.id === id);
-      
-      if (index === -1) throw new Error('Tag not found');
-      
-      tags[index].name = name;
-      localStorage.setItem(TAGS_KEY, JSON.stringify(tags));
-      return tags[index];
+      // Backend does not support tag renaming currently
+      console.warn("Tag renaming not supported by backend");
+      return { id, name } as Tag;
     },
 
     delete: async (id: string) => {
-      await delay(200);
-      const tags = JSON.parse(localStorage.getItem(TAGS_KEY) || '[]');
-      const filteredTags = tags.filter((t: Tag) => t.id !== id);
-      localStorage.setItem(TAGS_KEY, JSON.stringify(filteredTags));
-      
-      // Also remove this tag from all notes
-      const notes = JSON.parse(localStorage.getItem(NOTES_KEY) || '[]');
-      const updatedNotes = notes.map((n: Note) => ({
-        ...n,
-        tags: n.tags.filter(tId => tId !== id)
-      }));
-      localStorage.setItem(NOTES_KEY, JSON.stringify(updatedNotes));
+      await api.delete(`/tags/${id}`);
     }
   }
 };

@@ -17,7 +17,7 @@ export default function NoteEditor({ noteId, onBack }: NoteEditorProps) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tags, setTags] = useState<Tag[]>([]); // All available tags
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [selectedTagNames, setSelectedTagNames] = useState<string[]>([]);
   const [newTagInput, setNewTagInput] = useState('');
   const [isPreview, setIsPreview] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -41,7 +41,7 @@ export default function NoteEditor({ noteId, onBack }: NoteEditorProps) {
           if (note) {
             setTitle(note.title);
             setContent(note.content);
-            setSelectedTagIds(note.tags);
+            setSelectedTagNames(note.tags);
             setLastSaved(new Date(note.updatedAt));
           }
         }
@@ -66,7 +66,7 @@ export default function NoteEditor({ noteId, onBack }: NoteEditorProps) {
     }, 3000);
 
     return () => clearTimeout(saveTimeout);
-  }, [title, content, selectedTagIds]);
+  }, [title, content, selectedTagNames]);
 
   const saveNote = async () => {
     if (!user) return;
@@ -77,7 +77,7 @@ export default function NoteEditor({ noteId, onBack }: NoteEditorProps) {
         title: title || (content.split('\n')[0]?.substring(0, 50) || 'Untitled'),
         content,
         ownerId: user.id,
-        tags: selectedTagIds
+        tags: selectedTagNames
       };
 
       if (currentNoteId) {
@@ -107,8 +107,7 @@ export default function NoteEditor({ noteId, onBack }: NoteEditorProps) {
       try {
         tag = await db.tags.create({
           name: tagName,
-          ownerId: user.id,
-          usageCount: 0
+          ownerId: user.id
         });
         setTags([...tags, tag]);
       } catch (error) {
@@ -117,15 +116,15 @@ export default function NoteEditor({ noteId, onBack }: NoteEditorProps) {
       }
     }
 
-    if (!selectedTagIds.includes(tag.id)) {
-      setSelectedTagIds([...selectedTagIds, tag.id]);
+    if (!selectedTagNames.includes(tag.name)) {
+      setSelectedTagNames([...selectedTagNames, tag.name]);
     }
     
     setNewTagInput('');
   };
 
-  const handleRemoveTag = (tagId: string) => {
-    setSelectedTagIds(selectedTagIds.filter(id => id !== tagId));
+  const handleRemoveTag = (tagName: string) => {
+    setSelectedTagNames(selectedTagNames.filter(name => name !== tagName));
   };
 
   const handleDelete = async () => {
@@ -193,13 +192,11 @@ export default function NoteEditor({ noteId, onBack }: NoteEditorProps) {
 
           {/* Tags Input */}
           <div className="flex flex-wrap items-center gap-2">
-            {selectedTagIds.map(tagId => {
-              const tag = tags.find(t => t.id === tagId);
-              if (!tag) return null;
+            {selectedTagNames.map(tagName => {
               return (
-                <span key={tagId} className="flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm border border-blue-500/30">
-                  #{tag.name}
-                  <button onClick={() => handleRemoveTag(tagId)} className="hover:text-white">
+                <span key={tagName} className="flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm border border-blue-500/30">
+                  #{tagName}
+                  <button onClick={() => handleRemoveTag(tagName)} className="hover:text-white">
                     <X size={14} />
                   </button>
                 </span>

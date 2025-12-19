@@ -27,7 +27,10 @@ export default function AuthPage() {
         await register(name, email, password);
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      console.error(err);
+      // Attempt to extract error message from axios response or fallback
+      const msg = err.response?.data?.detail || err.message || 'An error occurred';
+      setError(msg);
     } finally {
       setIsLoading(false);
     }

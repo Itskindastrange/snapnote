@@ -207,7 +207,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             {tags.map((tag) => (
               <button
                 key={tag.id}
-                onClick={() => onNavigate('notes-tag', tag.id)}
+                onClick={() => onNavigate('notes-tag', tag.name)}
                 className="px-4 py-2 bg-slate-800/50 border border-white/10 rounded-full text-slate-300 hover:bg-blue-600/20 hover:text-blue-400 hover:border-blue-500/30 transition-all"
               >
                 #{tag.name}

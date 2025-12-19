@@ -75,8 +75,8 @@ export default function TagManager() {
     setEditName(tag.name);
   };
 
-  const getUsageCount = (tagId: string) => {
-    return notes.filter(n => n.tags.includes(tagId)).length;
+  const getUsageCount = (tagName: string) => {
+    return notes.filter(n => n.tags.includes(tagName)).length;
   };
 
   if (isLoading) return <div className="p-8 text-center text-slate-500">Loading tags...</div>;
@@ -145,7 +145,7 @@ export default function TagManager() {
                     </div>
                     <div>
                       <h3 className="font-medium text-slate-200">#{tag.name}</h3>
-                      <p className="text-xs text-slate-500">{getUsageCount(tag.id)} notes</p>
+                      <p className="text-xs text-slate-500">{getUsageCount(tag.name)} notes</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
