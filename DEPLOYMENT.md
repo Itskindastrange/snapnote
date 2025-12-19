@@ -39,4 +39,18 @@ Cross-Origin Resource Sharing (CORS) is a security feature that restricts which 
     1.  Open `backend/main.py`.
     2.  Update the `origins` list with the new URL.
     3.  Commit and push the changes to GitHub.
+
+## 4. Build & Start Commands (Backend)
+
+When setting up the Web Service on Render (or similar platforms), you'll need to specify how to build and start the application.
+
+**Option A: Setting Root Directory (Recommended)**
+In your deployment settings, set the **Root Directory** to `backend`.
+*   **Build Command:** `pip install -r requirements.txt`
+*   **Start Command:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
+
+**Option B: Default Root Directory (Repository Root)**
+If you keep the Root Directory as the default (base of the repository):
+*   **Build Command:** `pip install -r backend/requirements.txt`
+*   **Start Command:** `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
     4.  Redeploy the backend.
