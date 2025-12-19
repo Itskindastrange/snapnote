@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from database import db
+from database import db, settings
 from routes import auth, notes, tags, users
 
 @asynccontextmanager
@@ -17,11 +17,7 @@ app.include_router(notes.router)
 app.include_router(tags.router)
 app.include_router(users.router)
 
-origins = [
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "https://snapnote-6jja.onrender.com",
-]
+origins = settings.ALLOWED_ORIGINS.split(",")
 
 app.add_middleware(
     CORSMiddleware,
