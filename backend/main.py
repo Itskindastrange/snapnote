@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import db, settings
 from routes import auth, notes, tags, users
@@ -12,9 +12,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-# ✅ CORS MUST COME FIRST
 origins = [origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",")]
-print(f"DEBUG: Allowed Origins: {origins}")
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,17 +21,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# ✅ THEN custom middleware
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    print(f"Incoming request: {request.method} {request.url}")
-    origin = request.headers.get("origin")
-    print(f"Origin header: {origin}")
-
-    response = await call_next(request)
-    print(f"Response status: {response.status_code}")
-    return response
 
 # ✅ THEN routers
 app.include_router(auth.router)

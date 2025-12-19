@@ -42,14 +42,19 @@ async def signup(user: UserCreate, response: Response):
     )
     
     # Set HttpOnly cookie
+    # On Render (production), we need SameSite=None and Secure=True for cross-site cookies
+    # On Localhost, we use SameSite=Lax and Secure=False
+    samesite_mode = "none" if settings.RENDER else "lax"
+    secure_mode = True if settings.RENDER else False
+
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        samesite="lax",
-        secure=False, # Set to True in production with HTTPS
+        samesite=samesite_mode,
+        secure=secure_mode,
     )
 
     return UserResponse(**created_user)
@@ -69,14 +74,17 @@ async def login(login_data: LoginRequest, response: Response):
         data={"sub": user["email"]}, expires_delta=access_token_expires
     )
     
+    samesite_mode = "none" if settings.RENDER else "lax"
+    secure_mode = True if settings.RENDER else False
+
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        samesite="lax",
-        secure=False, # Set to True in production with HTTPS
+        samesite=samesite_mode,
+        secure=secure_mode,
     )
     
     return UserResponse(**user)
